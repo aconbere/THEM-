@@ -1,11 +1,11 @@
-var DIRECTIONS = { north     : [0,   1]
-                 , northeast : [1,   1]
-                 , east      : [1,   0]
-                 , southeast : [1,  -1]
-                 , south     : [0,  -1]
-                 , southwest : [-1, -1]
-                 , west      : [-1,  0]
-                 , northwest : [-1,  1]
+var DIRECTIONS = { north     : { x: 0,  y:  1}
+                 , northeast : { x: 1,  y:  1}
+                 , east      : { x: 1,  y:  0}
+                 , southeast : { x: 1,  y: -1}
+                 , south     : { x: 0,  y: -1}
+                 , southwest : { x: -1, y: -1}
+                 , west      : { x: -1, y:  0}
+                 , northwest : { x: -1, y:  1}
                  }
 
 // array is a list of choices
@@ -42,7 +42,7 @@ var randomInt = function (max) {
 
 var randomDirection = function () {
   directions = Object.keys(DIRECTIONS)
-  return DIRECTIONS[randomInt(directions.length)]
+  return DIRECTIONS[directions[randomInt(directions.length)]]
 }
 
 
@@ -68,8 +68,18 @@ var drawAnt = function (context, ant, unitSize) {
   context.fillRect(ant.loc.x * unitSize, ant.loc.y * unitSize, unitSize, unitSize)
 }
 
-var moveAnt = function (ant, x, y) {
-  return createAnt((ant.loc.x + x) % unitDimension, (ant.loc.y + y) % unitDimension)
+var bounded = function (i, by) {
+  if (i < 0) {
+    return (by + i) % by
+  } else {
+    return i % by
+  }
+
+}
+
+var moveAnt = function (ant) {
+  return createAnt(bounded(ant.loc.x + ant.direction.x, unitDimension),
+                   bounded(ant.loc.y + ant.direction.y, unitDimension))
 }
 
 var createWorld = function (ants) {
@@ -89,7 +99,7 @@ var drawWorld = function (canvas, context, world) {
 
 var updateWorld = function (world) {
   world.ants = world.ants.map(function (ant) {
-    return moveAnt(ant, 1, 1)
+    return moveAnt(ant)
   })
   console.log(world)
 }

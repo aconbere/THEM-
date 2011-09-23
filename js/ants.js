@@ -1,3 +1,20 @@
+var range = function (start, end) {
+  if (arguments.length == 1) {
+    end = start, start = 0
+  }
+
+  array = []
+  for (var i = start; i < end; i++) {
+    array.push(i)
+  }
+
+  return array
+}
+
+var UNIT_DIMENSION = 40;
+
+var ANT_COUNT = 20
+
 var DIRECTIONS = { north     : { x: 0,  y:  1}
                  , northeast : { x: 1,  y:  1}
                  , east      : { x: 1,  y:  0}
@@ -33,7 +50,19 @@ var weightedChoice = function (array, mapper) {
 }
 
 var antMovementChoices = function (ant, world) {
+  // take the position of the ant
+  // take the direction of that ant
+  // look in the square to the left of where it's facing
+  // look in the square to the right of where it's facing
+  // look in the square in the direction it's facing
+  //
+  // in each of these cases see if there is food / pheremone / home and if there's an ant there
+  //
+  // if there's an ant in that location dismiss it
+  // if there's food +1 to the weight
+  // if there's pheremone +1 to the weight
 
+  
 }
 
 var randomInt = function (max) {
@@ -55,10 +84,8 @@ var createContext = function (id) {
          }
 }
 
-var createAnt = function(x,y) {
-  return { loc: { x: x
-                , y: y
-                }
+var createAnt = function(loc) {
+  return { loc: loc
          , direction: randomDirection()
          }
 }
@@ -78,18 +105,18 @@ var bounded = function (i, by) {
 }
 
 var moveAnt = function (ant) {
-  return createAnt(bounded(ant.loc.x + ant.direction.x, unitDimension),
-                   bounded(ant.loc.y + ant.direction.y, unitDimension))
+  loc = { x: bounded(ant.loc.x + ant.direction.x, UNIT_DIMENSION)
+        , y: bounded(ant.loc.y + ant.direction.y, UNIT_DIMENSION)
+        }
+  return createAnt(loc)
 }
 
 var createWorld = function (ants) {
   return { ants: ants || [] }
 }
 
-var unitDimension = 40;
-
 var drawWorld = function (canvas, context, world) {
-  var unitSize = canvas.width / unitDimension
+  var unitSize = canvas.width / UNIT_DIMENSION
 
   context.clearRect(0,0, canvas.width, canvas.height)
   world.ants.forEach(function (ant) {
@@ -104,11 +131,50 @@ var updateWorld = function (world) {
   console.log(world)
 }
 
-createSim = function () {
+var locationInArray = function (array, loc) {
+  return array.map(function (el) {
+    return (el.x == loc.x && el.y == loc.y)
+  }).reduce(function (acc, i) {
+    return acc || i
+  }, false)
+}
+
+var generateLocation = function (locations, maxX, maxY) {
+  var loc = { x: randomInt(maxX)
+            , y: randomInt(maxY)
+            }
+
+  if (!locationInArray(locations, loc)) {
+    return loc
+  } else {
+    return null
+  }
+}
+
+var generateRandomLocations = function (total, maxX, maxY) {
+  var locs = range(total).reduce(function (locations, i) {
+    var loc
+    while (!loc) {
+      loc = generateLocation(locations, maxX, maxY)
+    }
+    //var loc = generateLocation(locations, maxX, maxY)
+    //console.log(loc)
+
+    locations.push(loc)
+    return locations
+  }, [])
+
+  return locs
+}
+
+var createSim = function () {
   canvas = document.getElementById("simulation-visualization")
   context = canvas.getContext('2d')
 
-  var world = createWorld([createAnt(1,1)])
+  ants = generateRandomLocations(ANT_COUNT, UNIT_DIMENSION, UNIT_DIMENSION).map(function (loc) {
+    return createAnt(loc)
+  })
+  var world = createWorld(ants)
 
   // sim the world
   setInterval(function () {
@@ -120,4 +186,4 @@ createSim = function () {
   }, 100)
 }
 
-createSim()
+//createSim()
